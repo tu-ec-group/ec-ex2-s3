@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import com.amazonaws.services.s3.model.*;
 import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonClientException;
@@ -19,10 +20,6 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
 
 public class S3Exercise {
 	
@@ -50,27 +47,36 @@ public class S3Exercise {
 							+ "location (/path-to-your-user-home/.aws/credentials), and is in valid format.",
 					e);
 		}
+		System.out.println("test");
 
 		AmazonS3 s3 = new AmazonS3Client(credentials);
 
 		try {
-			// TODO create a bucket with name "ise-tu-berlin-exercise2-",
-			// followed by your nickname (e.g., silversurfer)
 			log.info("Creating a bucket (if it does not exist, yet)");
+
+			Bucket bucket = s3.createBucket("ise-tu-berlin-exercise2-david");
+
 			
 
-			// TODO Upload a text File object to your S3 bucket
-			// use the createSampleFile method to create the File object
 			log.info("Uploading an object");
+			try {
+				s3.putObject(new PutObjectRequest(bucket.getName(), "test", createSampleFile("david")));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
-
-			// TODO Download the file from S3 and print it out using the
-			// displayTextInputStream method.
 			log.info("Downloading an object");
 
-			
-			//s3.deleteObject(bucketName, key);
-			//s3.deleteBucket(bucketName);
+			S3Object file = s3.getObject(new GetObjectRequest(bucket.getName(), "test"));
+			try {
+				displayTextInputStream(file.getObjectContent());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+
+			s3.deleteObject(bucket.getName(), file.getKey());
+			s3.deleteBucket(bucket.getName());
 
 		} catch (AmazonServiceException ase) {
 			log.error("Caught an AmazonServiceException, which means your request made it "
